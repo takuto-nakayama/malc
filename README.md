@@ -2,8 +2,30 @@
 ## Overview
 
 
-## Directory Structure
+## Repository Structure
+```
+malc/
+├README.md
+├python
+│   ├classes.py
+│   ├setup.py
+│   ├classes.py
+│   └
+├sample-data
+│   ├wiki
+│   ├wiki
+│   └wiki
+├output
+│   ├
+│   ├wiki
+│   └wiki
+└hoo
+    ├foo
+    ├
+    └
+```
 
+- `setup.py`: for preprocessing of the repository.
 
 ## How to Run
 ### Setup
