@@ -1,6 +1,5 @@
 #  importing modules
 from datasets import load_dataset
-from dotenv import load_dotenv
 from sklearn.neighbors import NearestNeighbors
 from transformers import BertTokenizer, BertModel
 
@@ -9,7 +8,6 @@ import pandas as pd
 import os
 import re
 import torch
-import zulip
 
 
 class Wiki:
@@ -41,9 +39,10 @@ class Wiki:
 		return out
 
 
-	def get_sentence(self, id:int, text_range:tuple):
+	def get_sentence(self, token:int, text_range:tuple):
 		list_filtered = []
 		self.filtered = {}
+		id = self.tokenizer.convert_tokens_to_ids(token)
 		for i in range(text_range[0], text_range[1]):
 			text = re.sub(' *\n *', '\n', self.dataset[i]['text'])
 			text = re.sub('\n\n+', '\n', text)
@@ -218,26 +217,3 @@ class Manifold:
 		
 		return R
 
-
-class Zulip:
-	def __init__(self):
-		load_dotenv()
-		email = os.getenv('EMAIL')
-		api_key = os.getenv('API_KEY')
-		site = os.getenv('SITE')
-		self.to = os.getenv('TO')
-		self.topic = os.getenv('TOPIC')
-		self.client = zulip.Client(
-			email=email,
-			api_key=api_key,
-			site=site
-		)
-
-
-	def send_report(self, content):
-		self.client.send_message({
-			"type": 'steam',
-			"to": self.to,
-			"topic": self.topic,
-			"content": content
-		})

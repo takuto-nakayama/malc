@@ -8,20 +8,18 @@ malc/
 ├README.md
 ├python
 │   ├classes.py
-│   ├setup.py
-│   ├classes.py
-│   └
+│   ├curvature.py
+│   ├embed.py
+│   └setup.py
+│
 ├sample-data
-│   ├wiki
-│   ├wiki
-│   └wiki
-├output
-│   ├
-│   ├wiki
-│   └wiki
-└hoo
+│   ├embedding-en.h5
+│   ├embedding-de.h5
+│   └embedding-ja.h5
+│
+└output
+    ├hoo
     ├foo
-    ├
     └
 ```
 
@@ -29,9 +27,9 @@ malc/
 
 ## How to Run
 ### Setup
-Setting up will be processed by the command below:
+Setting up will be processed by the command below in this repository:
 ```
-python setup.py
+pip install .
 ```
 
 ### Command Line & Options
