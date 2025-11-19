@@ -103,10 +103,10 @@ class Embedding:
 
 class Manifold:
 	def metric(self, data:np.ndarray, point:np.ndarray, k:int, n:int):
-		nn = NearestNeighbors(n_neighbors=k)
-		nn.fit(data)
+		nn = NearestNeighbors(n_neighbors=k).fit(data)
 		_, index = nn.kneighbors(point.reshape(1,-1))
-		neighbors = data[index].squeeze()
+		index = np.sort(index).squeeze()
+		neighbors = data[index]
 		centered = neighbors - point
 		U, S, Vt = np.linalg.svd(centered, full_matrices=False)
 		rotated = (centered @ Vt.T)[:,:n]
@@ -136,12 +136,12 @@ class Manifold:
 				H[:, i, j] = coef[:, idx]
 
 		dg = np.zeros((n, n, n))
-		dg = np.einsum('pjk,pj->kij', H, J) + np.einsum('pj,pjk->kij', J, H)
+		dg = np.einsum('pik,pj->kij', H, J) + np.einsum('pj,pik->kij', J, H)
 		
 		return g, dg, J, H
 
 
-	def christoffel(self, g, dg, J, H):
+	def christoffel(self, g, dg, H):
 		g_inv = np.linalg.inv(g)
 		term = dg + np.transpose(dg, (1,0,2)) - np.transpose(dg, (2,0,1))
 		gamma = 0.5 * np.einsum('il, jkl -> ijk', g_inv, term)
@@ -159,7 +159,7 @@ class Manifold:
 		T = dg + np.transpose(dg, (2,1,0)) - np.transpose(dg, (1,0,2))
 		dgamma = np.zeros((n, n, n, n))
 		tmp = d2g + np.transpose(d2g, (0,2,1,3)) - np.transpose(d2g, (0,2,1,3))
-		term1 = 0.5 * np.einsum('mi,ljk->mijl', dg_inv, T)
+		term1 = 0.5 * np.einsum('mil,ljk->mijl', dg_inv, T)
 		term2 = 0.5 * np.einsum('il,mjlk->mijk', g_inv, tmp)
 		dgamma = term1 + term2
 
