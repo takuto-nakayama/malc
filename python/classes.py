@@ -1,6 +1,8 @@
 #  importing modules
 from datasets import load_dataset
+from sklearn.linear_model import LinearRegression
 from sklearn.neighbors import NearestNeighbors
+from sklearn.preprocessing import PolynomialFeatures
 from transformers import BertTokenizer, BertModel
 
 import numpy as np
@@ -20,7 +22,7 @@ class Wiki:
 		out = {}
 		keys = list_filtered[0].keys()
 		for k in keys:
-			parts = [d[k] for d in list_().filtered if d[k].size(0) > 0]
+			parts = [d[k] for d in list_filtered if d[k].size(0) > 0]
 			if not parts:
 				proto = list_filtered[0][k]
 				out[k] = proto.new_empty((0, 0))
