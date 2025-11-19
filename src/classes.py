@@ -105,14 +105,11 @@ class Manifold:
 	def metric(self, data:np.ndarray, point:np.ndarray, k:int, n:int):
 		nn = NearestNeighbors(n_neighbors=k)
 		nn.fit(data)
-
 		_, index = nn.kneighbors(point.reshape(1,-1))
 		neighbors = data[index].squeeze()
 		centered = neighbors - point
-
 		U, S, Vt = np.linalg.svd(centered, full_matrices=False)
 		rotated = (centered @ Vt.T)[:,:n]
-
 		poly = PolynomialFeatures(degree=2, include_bias=True)
 		X_poly = poly.fit_transform(rotated)
 		feature_names = poly.get_feature_names_out()
@@ -124,14 +121,12 @@ class Manifold:
 		for i in range(n):
 			name = f"x{i}"
 			g_idx.append(int(np.where(feature_names == name)[0][0]))
-
 		J = coef[:, g_idx]
 		g = J.T @ J
 
 		H = np.zeros((coef.shape[0], n, n))
 		for i in range(n):
 			for j in range(n):
-				# 対称性のため min/max を使う
 				if i == j:
 					name = f"x{i}^2"
 				else:
@@ -141,12 +136,7 @@ class Manifold:
 				H[:, i, j] = coef[:, idx]
 
 		dg = np.zeros((n, n, n))
-		for k in range(n):
-			for i in range(n):
-				for j in range(n):
-					dg[k, i, j] = np.sum(
-						H[:, i, k] * J[:, j] +
-						J[:, i] * H[:, j, k])
+		dg = np.einsum('pjk,pj->kij', H, J) + np.einsum('pj,pjk->kij', J, H)
 		
 		return g, dg, J, H
 
@@ -155,48 +145,23 @@ class Manifold:
 		g_inv = np.linalg.inv(g)
 		term = dg + np.transpose(dg, (1,0,2)) - np.transpose(dg, (2,0,1))
 		gamma = 0.5 * np.einsum('il, jkl -> ijk', g_inv, term)
-		
+
 		n = g.shape[0]
-		# ---- (1) inverse metric derivative: dg_inv[m,i,l] ----
 		dg_inv = np.zeros((n, n, n))
 		for m in range(n):
 			dg_inv[m] = - g_inv @ dg[m] @ g_inv
-
-		# ---- (2) second derivatives of g: d2g[m,j,i,k] = ∂_m ∂_j g_{ik} ----
 		d2g = np.zeros((n, n, n, n))
-		# Using formula with H
-		# ∂_m∂_j g_{ik} = sum_d (H[d,i,m] H[d,k,j] + H[d,i,j] H[d,k,m])
 		d2g = (
 			np.einsum('dim,dkj->mjik', H, H) +
 			np.einsum('dij,dkm->mjik', H, H)
 		)
-
-		# ---- (3) build T[j,l,k] ----
 		T = np.zeros((n, n, n))
-		for j in range(n):
-			for l in range(n):
-				for k in range(n):
-					T[j,l,k] = dg[j,l,k] + dg[k,l,j] - dg[l,j,k]
-
-		# ---- (4) derivative of christoffel: dgamma[m,i,j,k] ----
+		T = dg + np.transpose(dg, (2,1,0)) - np.transpose(dg, (1,0,2))
 		dgamma = np.zeros((n, n, n, n))
-		for m in range(n):
-			for i in range(n):
-				for j in range(n):
-					for k in range(n):
-						# first term: 0.5 * (∂_m g^{i l}) T[j,l,k]
-						term1 = 0.5 * np.sum(dg_inv[m,i,:] * T[j,:,k])
-
-						# second term:
-						# 0.5 * g^{i l} ( ∂_m∂_j g_{l k} + ∂_m∂_k g_{l j} - ∂_m∂_l g_{j k} )
-						tmp = (
-							d2g[m, j, :, k] +
-							d2g[m, k, :, j] -
-							d2g[m, :, j, k]
-						)
-						term2 = 0.5 * np.sum(g_inv[i,:] * tmp)
-
-						dgamma[m,i,j,k] = term1 + term2
+		tmp = d2g + np.transpose(d2g, (0,2,1,3)) - np.transpose(d2g, (0,2,1,3))
+		term1 = 0.5 * np.einsum('mi,ljk->mijl', dg_inv, T)
+		term2 = 0.5 * np.einsum('il,mjlk->mijk', g_inv, tmp)
+		dgamma = term1 + term2
 
 		return gamma, dgamma
 
@@ -204,17 +169,9 @@ class Manifold:
 	def curvature_tensor(self, gamma, dgamma):
 		n = gamma.shape[0]
 		R = np.zeros((n, n, n, n))
-		for l in range(n):
-			for i in range(n):
-				for j in range(n):
-					for k in range(n):
-						term = dgamma[j, l, i, k] - dgamma[i, l, j, k]
-						s1 = 0.0
-						s2 = 0.0
-						for m in range(n):
-							s1 += gamma[m, i, k] * gamma[l, j, m]
-							s2 += gamma[m, j, k] * gamma[l, i, m]
-						R[l, i, j, k] = term + s1 - s2
-		
-		return R
+		term = np.transpose(dgamma, (1,2,0,3)) - np.transpose(dgamma, (1,0,2,3))
+		s1 = np.einsum('mik,ljm->lijk', gamma, gamma)
+		s2 = np.einsum('mjk,lim->lijk', gamma, gamma)
+		R = term + s1 - s2
 
+		return R
