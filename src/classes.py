@@ -18,16 +18,15 @@ class Wiki:
 		self.tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 
-	def _pad_and_cat(self, list_filtered, pad_id):
-		out = {}
+	def pad_and_cat(self, list_filtered, pad_id):
+		output = {}
 		keys = list_filtered[0].keys()
 		for k in keys:
 			parts = [d[k] for d in list_filtered if d[k].size(0) > 0]
 			if not parts:
-				proto = list_filtered[0][k]
-				out[k] = proto.new_empty((0, 0))
+				pseudo = list_filtered[0][k]
+				output[k] = pseudo.new_empty((0, 0))
 				continue
-
 			max_len = max(t.size(1) for t in parts)
 			if k == 'input_ids':
 				pad_val = pad_id
@@ -35,10 +34,9 @@ class Wiki:
 				pad_val = 0
 			else:
 				pad_val = 0
-
 			parts = [torch.nn.functional.pad(t, (0, max_len - t.size(1)), value=pad_val) for t in parts]
-			out[k] = torch.cat(parts, dim=0)
-		return out
+			output[k] = torch.cat(parts, dim=0)
+		return output
 
 
 	def get_sentence(self, token:int, text_range:tuple):
@@ -59,7 +57,7 @@ class Wiki:
 			bool_mask = (encoded['input_ids']==id).any(dim=1)
 			list_filtered.append({k: v[bool_mask] for k, v in encoded.items()})
 		pad_id = self.tokenizer.pad_token_id
-		self.filtered = self._pad_and_cat(list_filtered, pad_id)
+		self.filtered = self.pad_and_cat(list_filtered, pad_id)
 		print(f'Sentences containing the word ID {id} have been extracted. ({len(self.filtered["input_ids"])} sentences)')
 
 
@@ -70,7 +68,7 @@ class Embedding:
 		self.tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
 
 
-	def embed(self, id:int, encoded:dict, batch_size:int):
+	def embed(self, token:str, encoded:dict, batch:int):
 		if torch.cuda.is_available():
 			device = torch.device('cuda')	
 			print(f'devide in use: cuda')		
@@ -81,13 +79,14 @@ class Embedding:
 			device = 'cpu'
 			print(f'devide in use: cpu')
 
+		id = self.tokenizer.convert_tokens_to_ids(token)
 		self.model.to(device).eval()
 		encoded = {k: v.to(device) for k, v in encoded.items()}
 		list_batch = []
-		batch_num = len(encoded['input_ids']) // batch_size
+		cnt_batch = len(encoded['input_ids']) // batch
 
-		for _ in range(batch_num):
-			encoded_batch = {k:encoded[k][batch_size*_:min(batch_size*(_+1), len(encoded[k]))] for k in encoded.keys()}
+		for _ in range(cnt_batch):
+			encoded_batch = {k:encoded[k][batch*_:min(batch*(_+1), len(encoded[k]))] for k in encoded.keys()}
 			mask = (encoded_batch['input_ids'] == id)
 			s_idx, t_idx = mask.nonzero(as_tuple=True)
 			
@@ -95,8 +94,8 @@ class Embedding:
 				output_batch = self.model(**encoded_batch)['last_hidden_state']
 				list_batch.append(output_batch[s_idx, t_idx].to('cpu'))
 			
-			processed = min(batch_size*(_+1), len(encoded['input_ids'])) * 100 // len(encoded["input_ids"])
-			print(f'\rProcessing: {processed}%  |{"#"*(processed//4)}{"-"*(25-processed//4)}| ({min(batch_size*(_+1), len(encoded["input_ids"]))}/{len(encoded["input_ids"])})', end='', flush=True)
+			processed = min(batch*(_+1), len(encoded['input_ids'])) * 100 // len(encoded["input_ids"])
+			print(f'\rProcessing: {processed}%  |{"#"*(processed//4)}{"-"*(25-processed//4)}| ({min(batch*(_+1), len(encoded["input_ids"]))}/{len(encoded["input_ids"])})', end='', flush=True)
 			
 		self.output = torch.cat(list_batch, dim=0)
 
