@@ -17,8 +17,6 @@ if __name__ == '__main__':
     n = args.n
     manifold = classes.Manifold()
 
-    g, dg,J, H = manifold.metric(data, point, k, n)
-    gamma, dgamma = manifold.christoffel(g, dg, J, H)
-    R = manifold.riemann(gamma, dgamma)
+    R = manifold.curvature_tensor(data, point, k, n)
 
     print(f'Riemann curvature tensor at index {args.index}:\n{R}')
