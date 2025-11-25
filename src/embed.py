@@ -1,8 +1,6 @@
 import argparse, classes, h5py, os, pickle
 
 
-embedding = classes.EmbeddingModel()
-
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('lang', type=str, help='a language code of the in[ut data')
