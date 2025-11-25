@@ -36,16 +36,18 @@ class Wiki:
 		return output
 
 
-	def get_sentence(self, token:int, text_range:tuple):
+	def get_sentence(self, token:str, num_text:int):
 		list_filtered = []
 		self.filtered = {}
 		id = self.tokenizer.convert_tokens_to_ids(token)
-		for i in range(text_range[0], text_range[1]):
-			text = re.sub(' *\n *', '\n', self.dataset[i]['text'])
-			text = re.sub('\n\n+', '\n', text)
-			text = text.split('\n')
+		idx = np.sort(np.random.choice(len(self.dataset['text']), num_text, replace=False))
+		text = self.dataset['text'][idx]
+		for t in text:
+			t = re.sub(' *\n *', '\n', t)
+			t = re.sub('\n\n+', '\n', t)
+			t = t.split('\n')
 			encoded = self.tokenizer(
-				text,
+				t,
 				return_tensors='pt',
 				padding=True,
 				truncation=True,
@@ -55,14 +57,14 @@ class Wiki:
 			list_filtered.append({k: v[bool_mask] for k, v in encoded.items()})
 		pad_id = self.tokenizer.pad_token_id
 		self.filtered = self.pad_and_cat(list_filtered, pad_id)
-		print(f'Sentences containing the word ID {id} have been extracted. ({len(self.filtered["input_ids"])} sentences)')
+		print(f'Sentences containing the word {token}, ID {id}, have been extracted. ({len(self.filtered["input_ids"])} sentences)')
 
 
 
 class Embedding:
-	def __init__(self):
-		self.model = BertModel.from_pretrained('bert-base-multilingual-cased')
-		self.tokenizer = BertTokenizer.from_pretrained('bert-base-multilingual-cased')
+	def __init__(self, model_name:str='bert-base-multilingual-cased', tokenizer_name:str='bert-base-multilingual-cased'):
+		self.model = BertModel.from_pretrained(model_name)
+		self.tokenizer = BertTokenizer.from_pretrained(tokenizer_name)
 
 
 	def embed(self, token:str, encoded:dict, batch:int):
@@ -77,7 +79,7 @@ class Embedding:
 			print(f'devide in use: cpu')
 
 		id = self.tokenizer.convert_tokens_to_ids(token)
-		self.model.to(device).eval()
+		self.model.to(device).eval().half()
 		encoded = {k: v.to(device) for k, v in encoded.items()}
 		list_batch = []
 		cnt_batch = len(encoded['input_ids']) // batch

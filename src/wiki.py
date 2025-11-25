@@ -2,9 +2,7 @@
 
 ## Importing necessary libraries
 from transformers import BertTokenizer, BertModel
-import argparse
-import classes
-import h5py
+import argparse, classes, pickle
 
 
 if __name__ == '__main__':
@@ -14,23 +12,22 @@ if __name__ == '__main__':
     parser.add_argument('token', type=str, help='token for which sentences are to be extracted')
     parser.add_argument('--tokenizer', type=str, default='bert-base-multilingual-cased', help='pretrained tokenizer name (default="bert-base-multilingual-cased")')
     parser.add_argument('--model', type=str, default='bert-base-multilingual-cased', help='pretrained model name (default="bert-base-multilingual-cased")')
-    parser.add_argument('--range', type=int, nargs=2, default=[0,10000], help='range of texts from Wikipedia dataset (default=[0,10000])')
-    parser.add_argument('--batch', type=int, default=1000, help='batch size for processing texts (default=1000)')
+    parser.add_argument('--num_text', type=int, default=10000, help='the number of texts from Wikipedia dataset (default=10000)')
+    parser.add_argument('--save_path', type=str, default='../sample-data/encoded/', help='path to a directory to save the encoded data (default="../sample-data/encoded")')
 
     args = parser.parse_args()
     lang = args.lang
     token = args.token
     tokenizer = BertTokenizer.from_pretrained(args.tokenizer)
     model = BertModel.from_pretrained(args.model)
-    range = args.range
-    batch = args.batch
+    num_text = args.num_text
+    save_path = args.save_path
 
     wiki = classes.Wiki(lang=lang)
-    n_batch = (range[1]-range[0]) // batch + 1
 
 
     ## Main processing
-    for _ in range(1, n_batch):
-        print(f'\n\nProcessing: batch number is {_} ({_*batch}/{range[1]-range[0]} texts)')
-        wiki.get_sentence(token=token, text_range=(range[0]+(_-1)*batch, min(range[0]+_*batch, range[1])))
-        wiki.filtered
+    wiki.get_sentence(token=token, num_text=num_text)
+    
+    with open(f'{save_path}/encoded-wiki-{lang}-{token}.pkl', 'wb') as f:
+        pickle.dump(wiki.filtered, f)
