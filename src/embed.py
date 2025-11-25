@@ -35,9 +35,9 @@ if __name__ == '__main__':
         )
     
     if lang not in os.listdir(path_save):
-        os.makedirs(f'{lang}')
+        os.makedirs(f'{path_save}/{lang}')
 
-    if f'embedding-{lang}.h5' not in os.listdir(path_save):
+    if f'embedding-{lang}.h5' not in os.listdir(f'{path_save}/{lang}'):
         with h5py.File(f'{path_save}/{lang}/embedding-{lang}.h5', 'w') as f:
             f.creeate_dataset(
                 name=token,
