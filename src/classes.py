@@ -39,6 +39,7 @@ class Wiki:
 	def get_sentence(self, token:str, num_text:int):
 		list_filtered = []
 		self.filtered = {}
+		np.random.seed(42)
 		id = self.tokenizer.convert_tokens_to_ids(token)
 		idx = np.sort(np.random.choice(len(self.dataset['text']), num_text, replace=False))
 		text = self.dataset['text'][idx]
@@ -57,7 +58,7 @@ class Wiki:
 			list_filtered.append({k: v[bool_mask] for k, v in encoded.items()})
 		pad_id = self.tokenizer.pad_token_id
 		self.filtered = self.pad_and_cat(list_filtered, pad_id)
-		print(f'Sentences containing the word {token}, ID {id}, have been extracted. ({len(self.filtered["input_ids"])} sentences)')
+		print(f'Sentences containing the word "{token}", ID {id}, have been extracted. ({len(self.filtered["input_ids"])} sentences)')
 
 
 
