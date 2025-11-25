@@ -38,5 +38,6 @@ if __name__ == '__main__':
             pickle.dump(wiki.filtered, f)
 
     else:
-        with open(f'{path_save}/{lang}/encoded-wiki-{lang}-{token}-{(lambda d: f'{d.month}{d.day}{d.hour}{d.minute}')(datetime.now())}.pkl', 'wb') as f:
+        idx = (lambda d: f'{d.month}{d.day}{d.hour}{d.minute}')(datetime.now())
+        with open(f'{path_save}/{lang}/encoded-wiki-{lang}-{token}-{idx}.pkl', 'wb') as f:
             pickle.dump(wiki.filtered, f)
