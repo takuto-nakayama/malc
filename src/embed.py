@@ -5,7 +5,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('lang', type=str, help='a language code of the in[ut data')
     parser.add_argument('token', type=str, help='token for which embeddings are to be extracted')
-    parser.add_argument('path_encoded', type=dict, help='path to encoded sentences containing the token_ids')
+    parser.add_argument('path_encoded', type=str, help='path to encoded sentences containing the token_ids')
     parser.add_argument('--batch', type=int, default=100, help='batch size for embedding extraction (default=100)')
     parser.add_argument('--model', type=str, default='bert-base-multilingual-cased', help='pretrained model name (default="bert-base-multilingual-cased")')
     parser.add_argument('--tokenizer', type=str, default='bert-base-multilingual-cased', help='pretrained tokenizer name (default="bert-base-multilingual-cased")')
