@@ -204,7 +204,7 @@ class Manifold:
 			np.transpose(d2g, (0,1,2,3)) -
 			np.transpose(d2g, (3,1,2,0))
 		)
-		term1 = 0.5 * np.einsum('mil,ljk->mijl', dg_inv, term)
+		term1 = 0.5 * np.einsum('mil,ljk->mijk', dg_inv, term)
 		term2 = 0.5 * np.einsum('il,mjlk->mijk', g_inv, tmp)
 		
 		dgamma = term1 + term2
@@ -213,7 +213,7 @@ class Manifold:
 
 
 	def curvature_tensor(self, data:np.ndarray, point:np.ndarray, k:int, n:int):
-		g, dg, d2g = self.metric(data, point, k, n)
+		g, dg, d2g, J, H, H3 = self.metric(data, point, k, n)
 		gamma, dgamma = self.christoffel(g, dg, d2g)
 		R = np.zeros((n, n, n, n))
 		term = np.transpose(dgamma, (1,2,0,3)) - np.transpose(dgamma, (1,0,2,3))
