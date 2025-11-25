@@ -189,9 +189,9 @@ class Manifold:
 		#  term = [j,k,l]+[k,j,l]-[l,j,k] -> (0,1,2)+(1,0,2)-(2,0,1)
 		#  gamma = 0.5 * g_inv * term -> [i,l],[j,k,l]
 		term = (
-			np.transpose(dg, (1,2,0)) +
-			np.transpose(dg, (0,1,2)) -
-			np.transpose(dg, (2,1,0))
+			dg +
+			np.transpose(dg, (1,0,2)) -
+			np.transpose(dg, (2,0,1))
 		)
 		gamma = 0.5 * np.einsum('il, jkl -> ijk', g_inv, term)  ## (n,n,n)
 
@@ -202,15 +202,15 @@ class Manifold:
 			dg_inv[m] = - g_inv @ dg[m] @ g_inv
 		
 		dgamma = np.zeros((n, n, n, n))
-		tmp = (
-			np.transpose(d2g, (1,2,3,0)) +
-			np.transpose(d2g, (0,1,2,3)) -
-			np.transpose(d2g, (3,1,2,0))
+		tmp = (  ## [m,k,i,j] = \partial_m \partial_k g_{ij}
+			d2g +
+			np.transpose(d2g, (0,2,1,3)) -
+			np.transpose(d2g, (0,3,1,2))
 		)
-		term1 = 0.5 * np.einsum('mil,ljk->mijk', dg_inv, term)
-		term2 = 0.5 * np.einsum('il,mjlk->mijk', g_inv, tmp)
+		term1 = 0.5 * np.einsum('mil,jkl->mijk', dg_inv, term)
+		term2 = 0.5 * np.einsum('il,mjkl->mijk', g_inv, tmp)
 		
-		dgamma = term1 + term2
+		dgamma = term1 + term2  ## [m,i,j,k] = \partial_m \gamma^i_{jk}
 
 		return gamma, dgamma
 
@@ -219,9 +219,11 @@ class Manifold:
 		g, dg, d2g, J, H, H3 = self.metric(data, point, k, n)
 		gamma, dgamma = self.christoffel(g, dg, d2g)
 		R = np.zeros((n, n, n, n))
-		term = np.transpose(dgamma, (1,2,0,3)) - np.transpose(dgamma, (1,0,2,3))
-		s1 = np.einsum('mik,ljm->lijk', gamma, gamma)
-		s2 = np.einsum('mjk,lim->lijk', gamma, gamma)
+		
+		## term [l,i,j,k] = \partial_k \gamma^i_{lj} - \partial_l \gamma^i_{kj}
+		term = np.transpose(dgamma, (1,0,3,2)) - np.transpose(dgamma, (0,1,2,3))
+		s1 = np.einsum('ikm,mlj->ikjl', gamma, gamma)  ## s1 = \gamma^i_{km} \gamma^m_{lj}
+		s2 = np.einsum('ilm,mkj->ikjl', gamma, gamma)  ## s2 = \gamma^i_{lm} \gamma^m_{kj}
 		R = term + s1 - s2
 
 		return R
