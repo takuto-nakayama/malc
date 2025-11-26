@@ -80,7 +80,7 @@ class Embedding:
 			print(f'devide in use: cpu')
 
 		id = self.tokenizer.convert_tokens_to_ids(token)
-		self.model.to(device).eval().half()
+		self.model.to(device).eval()
 		encoded = {k: v.to(device) for k, v in encoded.items()}
 		list_batch = []
 		cnt_batch = len(encoded['input_ids']) // batch
@@ -178,7 +178,7 @@ class Manifold:
 			np.einsum('pi,plkj->lkij', J, H3)
 		)
 
-		return g, dg, d2g, J, H, H3
+		return g, dg, d2g
 
 
 	def christoffel(self, g, dg, d2g):
@@ -216,7 +216,7 @@ class Manifold:
 
 
 	def curvature_tensor(self, data:np.ndarray, point:np.ndarray, k:int, n:int):
-		g, dg, d2g, J, H, H3 = self.metric(data, point, k, n)
+		g, dg, d2g = self.metric(data, point, k, n)
 		gamma, dgamma = self.christoffel(g, dg, d2g)
 		R = np.zeros((n, n, n, n))
 		
