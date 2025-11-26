@@ -34,17 +34,14 @@ if __name__ == '__main__':
         batch=batch
         )
     
-    if lang not in os.listdir(path_save):
-        os.makedirs(f'{path_save}/{lang}')
-
     if f'embedding-{lang}.h5' not in os.listdir(f'{path_save}/{lang}'):
-        with h5py.File(f'{path_save}/{lang}/embedding-{lang}.h5', 'w') as f:
+        with h5py.File(f'{path_save}/embedding-{lang}.h5', 'w') as f:
             f.create_dataset(
                 name=token,
                 data=embedding.output
                 )
     else:
-        with h5py.File(f'{path_save}/{lang}/embedding-{lang}.h5', 'a') as f:
+        with h5py.File(f'{path_save}/embedding-{lang}.h5', 'a') as f:
             f.create_dataset(
                 name=token,
                 data=embedding.output
