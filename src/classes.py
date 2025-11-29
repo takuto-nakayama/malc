@@ -141,7 +141,7 @@ class Manifold:
 
 				idx = np.where(feature_names == name)[0][0]
 				## (i,j): 
-				H[:, i, j] = coef[:, idx]  ## (coefs:768, an argument:n, another argument:n)
+				H[:, i, j] = coef[:, idx] * 2 ## (coefs:768, an argument:n, another argument:n)
 
 		H3 = np.zeros((coef.shape[0], n, n, n))
 		for i in range(n):
@@ -161,7 +161,7 @@ class Manifold:
 						name = f'x{min(i,j,k)} x{statistics.median((i,j,k))} x{max(i,j,k)}'
 					
 					idx = np.where(feature_names == name)[0][0]
-					H3[:, i, j, k] = coef[:, idx] ## (coefs:768, n, n, n)
+					H3[:, i, j, k] = coef[:, idx] * 6 ## (coefs:768, n, n, n)
 
 
 		#  dg[k,i,j] = <H[:,k,i], J[:,j]⟩+⟨J[:,i], H[:,k,j]>
