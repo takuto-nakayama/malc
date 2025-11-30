@@ -31,10 +31,10 @@ if __name__ == '__main__':
     wiki.get_sentence(token=token, num_text=num_text)
     
     if lang not in os.listdir(path_save):
-        os.makedirs(f'{lang}')
+        os.makedirs(f'{path_save}/{lang}')
 
     if 'encoded-wiki-{lang}-{token}.pkl' not in os.listdir(f'{path_save}/{lang}'):
-        with open(f'{path_save}/{lang}/encoded-wiki-    {lang}-{token}.pkl', 'wb') as f:
+        with open(f'{path_save}/{lang}/encoded-wiki-{lang}-{token}.pkl', 'wb') as f:
             pickle.dump(wiki.filtered, f)
 
     else:
