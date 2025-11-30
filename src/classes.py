@@ -7,7 +7,7 @@ from transformers import BertTokenizer, BertModel
 
 import numpy as np
 import pandas as pd
-import re, statistics, torch
+import math, re, statistics, torch
 
 class Wiki:
 	def __init__(self, lang:str):
@@ -124,44 +124,33 @@ class Manifold:
 		reg.fit(X_poly, centered)
 		coef = reg.coef_  ## (768, the number of arguments)
 
-		g_idx = []
-		for i in range(n):
-			name = f'x{i}'
-			g_idx.append(int(np.where(feature_names == name)[0][0]))
-		J = coef[:, g_idx]  ## (768, n)
+		index = [i for i, p in enumerate(poly.powers_) if sum(p) == 1]
+		J = coef[:, index]  ## (768, n)
 		g = J.T @ J  ##  (n, 768) @ (768, n) = (n, n)
 
 		H = np.zeros((coef.shape[0], n, n))  ## (768, n, n)
+		index = [i for i, p in enumerate(poly.powers_) if sum(p) == 2]
 		for i in range(n):
 			for j in range(n):
-				if i == j:
-					name = f'x{i}^2'
-				else:
-					name = f'x{min(i,j)} x{max(i,j)}'
+				for idx, power in zip(index, poly.powers_[index]):
+					deno = 1
+					for p in power:
+						deno *= math.factorial(p)
+					H[:,i,j] = coef[:,idx] * deno
 
-				idx = np.where(feature_names == name)[0][0]
-				## (i,j): 
-				H[:, i, j] = coef[:, idx] * 2 ## (coefs:768, an argument:n, another argument:n)
+		## (i,j): 
+		H[:, i, j] = coef[:, idx] * 2 ## (coefs:768, an argument:n, another argument:n)
 
 		H3 = np.zeros((coef.shape[0], n, n, n))
+		index = [i for i, p in enumerate(poly.powers_) if sum(p) == 3]
 		for i in range(n):
 			for j in range(n):
 				for k in range(n):
-					if i == j == k:
-						name = f'x{i}^3'
-					elif j == k and i < j:
-						name = f'x{i} x{j}^2'
-					elif j == k and i > j:
-						name = f'x{j}^2 x{i}'
-					elif i == j and i < k:
-						name = f'x{i}^2 x{k}'
-					elif i == j and i > k:
-						name = f'x{k} x{i}^2'
-					elif i != j != k and min(i,j,k) == i and max(i,j,k) == k:
-						name = f'x{min(i,j,k)} x{statistics.median((i,j,k))} x{max(i,j,k)}'
-					
-					idx = np.where(feature_names == name)[0][0]
-					H3[:, i, j, k] = coef[:, idx] * 6 ## (coefs:768, n, n, n)
+					for idx, power in zip(index, poly.powers_[index]):
+						deno = 1
+						for p in power:
+							deno *= math.factorial(p)
+						H3[:, i, j, k] = coef[:, idx] * deno ## (coefs:768, n, n, n)
 
 
 		#  dg[k,i,j] = <H[:,k,i], J[:,j]⟩+⟨J[:,i], H[:,k,j]>
