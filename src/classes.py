@@ -102,8 +102,8 @@ class Embedding:
 
 
 class Manifold:
-	def metric(self, data:np.ndarray, point:np.ndarray, k:int, n:int):
-		nn = NearestNeighbors(n_neighbors=k).fit(data)
+	def metric(self, data:np.ndarray, point:np.ndarray, k:int, n:int, metric:str='euclidean'):
+		nn = NearestNeighbors(n_neighbors=k, metric=metric).fit(data)
 		_, index = nn.kneighbors(point.reshape(1,-1))
 		index = np.sort(index).squeeze()
 
@@ -119,7 +119,6 @@ class Manifold:
 
 		poly = PolynomialFeatures(degree=3, include_bias=True)
 		X_poly = poly.fit_transform(rotated)  ## (k, the number of arguments)
-		feature_names = poly.get_feature_names_out()
 		reg = LinearRegression(fit_intercept=False)
 		reg.fit(X_poly, centered)
 		coef = reg.coef_  ## (768, the number of arguments)
