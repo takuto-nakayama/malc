@@ -17,13 +17,21 @@ if __name__ == '__main__':
 	path = args.path
 	metric = args.metric
 	save_path = args.save_path
-	paths = os.listdir(path)
 
 	## computing persistent homology
+	### if path is a file
+	embedding = np.load(path)
+	dgms = ripser(embedding, metric='cosine')['dgms']
+	### saving results
+	np.save(f'{save_path}/h0/{p}-h0.npy', dgms[0])
+	np.save(f'{save_path}/h1/{p}-h1.npy', dgms[1])
+
+	### if path is a directory
+	if os.path.isdir(path):
+		paths = os.listdir(path)
 	for p in paths:
 		embedding = np.load(p)
 		dgms = ripser(embedding, metric='cosine')['dgms']
-
-		## saving results
+		### saving results
 		np.save(f'{save_path}/h0/{p}-h0.npy', dgms[0])
 		np.save(f'{save_path}/h1/{p}-h1.npy', dgms[1])
