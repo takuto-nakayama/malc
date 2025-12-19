@@ -5,11 +5,11 @@ setup(
     version='0.1.0',
     packages=find_packages(),
     install_requires=[
-        'datasets',
         'numpy',
         'pandas',
+		'persim',
+		'ripser',
         'scikit-learn',
-        'torch',
-        'transformers'
-    ],
+		'seaborn'
+    ]
 )

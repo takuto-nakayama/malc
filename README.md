@@ -4,23 +4,39 @@
 
 ## Repository Structure
 ```
-malc/
+../
 ├README.md
-├python
+├code
+│   ├bottleneck.py
 │   ├classes.py
 │   ├curvature.py
-│   ├embed.py
-│   └setup.py
-│
-├sample-data
-│   ├embedding-en.h5
-│   ├embedding-de.h5
-│   └embedding-ja.h5
-│
+│   ├pdgm.py
+│   ├setup.py
+│   └wassersetin.py
+├data
+│   ├bert
+│   │   ├embedding-lang1.npy
+│   │   ├embedding-lang2.npy
+│   │   └...
+│   └fasttext
+│   │   ├embedding-lang1.npy
+│   │   ├embedding-lang2.npy
+│   │   └...
 └output
-    ├hoo
-    ├foo
-    └
+    ├bert
+    │   ├pdgm
+    │   │   ├h0
+    │   │   ├h1
+    │   │   └...
+    │   ├wasserstein.csv
+    │   └bottleneck.csv
+    └fasttext
+        ├pdgm
+        │   ├h0
+        │   ├h1
+        │   └...
+        ├wasserstein.csv
+        └bottleneck.csv
 ```
 
 - `setup.py`: for preprocessing of the repository.
@@ -47,7 +63,10 @@ python embed.py 'lang' 'token'
 |--save_emb|`bool` saves the embeddings|
 
 ### Sample Dataset
+#### fasttext
 
+
+#### bert
 
 ## Citation
 ```
