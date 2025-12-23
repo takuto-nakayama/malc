@@ -1,32 +1,37 @@
 #  Fitz (2025) Word Manifold
 ## importing modules
-from itertools import combinations
+from itertools import combinations, chain
 from nltk import ngrams
 from nltk.tokenize import word_tokenize
+from scipy.sparse import lil_matrix
 import numpy as np
-import argparse, itertools
+import argparse
 
 
 ## parsing arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('text', type=str)
+parser.add_argument('path', type=str)
 parser.add_argument('--window_size', type=int, default=5)
+parser.add_argument('--max_dim', type=int, default=2)
 args = parser.parse_args()
 
 
 ## defining variables
-text = args.text
+path = args.path
 window_size = args.window_size
-tokens = word_tokenize(text)
-windows = list(
-	ngrams(tokens, n=window_size)
-	)
+max_dim = args.max_dim
+
+with open(path, 'r') as f:
+    text = f.readlines()
+tokens = [word_tokenize(sent) for sent in text]
+windows = [list(ngrams(tkns, n=5)) for tkns in tokens]
+windows = sorted(set(chain.from_iterable(windows)))
 
 
 ## getting all skeleta
 skeleta = []
 
-for n in range(window_size):
+for n in range(max_dim):
 	Sn = []
 	for w in windows:
 		for idxs in combinations(range(len(w)), n+1):
@@ -45,7 +50,7 @@ for n in range(1, len(skeleta)):
     prev = skeleta[n-1]
     curr = skeleta[n]
     index_prev = {s: i for i, s in enumerate(prev)}
-    Bn = np.zeros(
+    Bn = lil_matrix(
         (len(prev), len(curr)), dtype=int
             )
     
@@ -56,27 +61,18 @@ for n in range(1, len(skeleta)):
             if face in index_prev:
                 Bn[index_prev[face], j] += sign
 
-    boundaries.append(Bn)
+    boundaries.append(Bn.tocsr())
 
 
 betti = []
-
 for n in range(len(boundaries)):
     Bn = boundaries[n]
-
-    # dim C_n = number of n-simplices
-    dim_Cn = Bn.shape[1]
-
-    # ker ∂n
-    nullity = dim_Cn - np.linalg.matrix_rank(Bn, 1e-10)
-
-    # im ∂n+1
+    rank_n = np.linalg.matrix_rank(boundaries[n].toarray())
     if n+1 < len(boundaries):
-        im_dim = np.linalg.matrix_rank(boundaries[n+1], 1e-10)
+        rank_np1 = np.linalg.matrix_rank(boundaries[n+1].toarray())
     else:
-        im_dim = 0
-
-    betti_n = nullity - im_dim
+        rank_np1 = 0
+    betti_n = boundaries[n].shape[1] - rank_n - rank_np1
     betti.append(betti_n)
     
 for n,b in enumerate(betti):
