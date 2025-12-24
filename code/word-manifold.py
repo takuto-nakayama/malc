@@ -31,7 +31,7 @@ windows = sorted(set(chain.from_iterable(windows)))
 ## getting all skeleta
 skeleta = []
 
-for n in range(max_dim):
+for n in range(max_dim+1):
 	Sn = []
 	for w in windows:
 		for idxs in combinations(range(len(w)), n+1):
@@ -44,8 +44,7 @@ for n in range(max_dim):
 
 
 ## getting boundary matrices
-boundaries = []
-
+boundaries = [[1 for _ in range(len(skeleta[0]))]]
 for n in range(1, len(skeleta)):
     prev = skeleta[n-1]
     curr = skeleta[n]
@@ -56,10 +55,9 @@ for n in range(1, len(skeleta)):
     
     for j, s in enumerate(curr):
         for i in range(len(s)):
-            face = s[:i] + s[i+1:]
-            sign = (-1)**i
-            if face in index_prev:
-                Bn[index_prev[face], j] += sign
+            hat = s[:i] + s[i+1:]
+            val = (-1)**i
+            Bn[index_prev[hat], j] += val
 
     boundaries.append(Bn.tocsr())
 
