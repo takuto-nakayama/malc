@@ -12,7 +12,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument('path', type=str)
 parser.add_argument('--window_size', type=int, default=5)
-parser.add_argument('--max_dim', type=int, default=2)
+parser.add_argument('--max_dim', type=int, default=3)
 args = parser.parse_args()
 
 
@@ -24,7 +24,7 @@ max_dim = args.max_dim
 with open(path, 'r') as f:
     text = f.readlines()
 tokens = [word_tokenize(sent) for sent in text]
-windows = [list(ngrams(tkns, n=5)) for tkns in tokens]
+windows = [list(ngrams(tkns, n=window_size)) for tkns in tokens]
 windows = sorted(set(chain.from_iterable(windows)))
 
 
