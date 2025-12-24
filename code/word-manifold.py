@@ -44,7 +44,13 @@ for n in range(max_dim+1):
 
 
 ## getting boundary matrices
-boundaries = [[1 for _ in range(len(skeleta[0]))]]
+boundaries = [lil_matrix(
+        (1, len(skeleta[0])),
+        dtype=int
+        )]
+boundaries[0][0,:] = [
+    1 for _ in range(len(skeleta[0]))
+    ]
 for n in range(1, len(skeleta)):
     prev = skeleta[n-1]
     curr = skeleta[n]
