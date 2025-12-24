@@ -12,7 +12,7 @@ if __name__ == '__main__':
 	parser.add_argument('id', type=str)
 	parser.add_argument('--sample_size', type=int, default=10000)
 	parser.add_argument('--metric', type=str, default='cosine')
-	parser.add_argument('--save_path', type=str, default='../output/pdgm/')
+	parser.add_argument('--save_path', type=str, default='../output/pdgm')
 	args = parser.parse_args()
 
 	## defining variables

@@ -5,19 +5,58 @@ from nltk import ngrams
 from nltk.tokenize import word_tokenize
 from scipy.sparse import lil_matrix
 import numpy as np
-import argparse
+import argparse, csv
 
 
 ## parsing arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('path', type=str)
+parser.add_argument('id', type=str)
+parser.add_argument('save_path', type=str)
 parser.add_argument('--window_size', type=int, default=5)
-parser.add_argument('--max_dim', type=int, default=3)
+parser.add_argument('--max_dim', type=int, default=2)
 args = parser.parse_args()
+
+def rank_mod2_sparse(B):
+    """
+    Compute rank of a sparse matrix over Z_2.
+    """
+    B = B.copy().tolil()
+    rows, cols = B.shape
+    r = 0
+
+    for c in range(cols):
+        pivot = None
+        for i in range(r, rows):
+            if B[i, c] % 2 != 0:
+                pivot = i
+                break
+        if pivot is None:
+            continue
+
+        # swap rows
+        if pivot != r:
+            B.rows[r], B.rows[pivot] = B.rows[pivot], B.rows[r]
+            B.data[r], B.data[pivot] = B.data[pivot], B.data[r]
+
+        # eliminate (XOR)
+        for i in range(rows):
+            if i != r and B[i, c] % 2 != 0:
+                B[i, :] = B[i, :] + B[r, :]
+                B.data[i] = [x % 2 for x in B.data[i]]
+
+        r += 1
+        if r == rows:
+            break
+
+    return r
+
 
 
 ## defining variables
 path = args.path
+id = args.id
+save_path = args.save_path
 window_size = args.window_size
 max_dim = args.max_dim
 
@@ -62,22 +101,24 @@ for n in range(1, len(skeleta)):
     for j, s in enumerate(curr):
         for i in range(len(s)):
             hat = s[:i] + s[i+1:]
-            val = (-1)**i
-            Bn[index_prev[hat], j] += val
-
+            Bn[index_prev[hat], j] += 1
     boundaries.append(Bn.tocsr())
 
 
-betti = []
+betti = [id]
 for n in range(len(boundaries)):
     Bn = boundaries[n]
-    rank_n = np.linalg.matrix_rank(boundaries[n].toarray())
-    if n+1 < len(boundaries):
-        rank_np1 = np.linalg.matrix_rank(boundaries[n+1].toarray())
+    rank_n = rank_mod2_sparse(Bn)
+    if n + 1 < len(boundaries):
+        rank_np1 = rank_mod2_sparse(boundaries[n + 1])
     else:
         rank_np1 = 0
-    betti_n = boundaries[n].shape[1] - rank_n - rank_np1
+    betti_n = Bn.shape[1] - rank_n - rank_np1
     betti.append(betti_n)
-    
+
+
+with open(save_path, 'a') as f:
+    writer = csv.writer(f)
+    writer.writerow(betti)
 for n,b in enumerate(betti):
 	print(f'n={n}: Betti={b}')
