@@ -131,7 +131,7 @@ for n in range(len(boundaries)):
     betti.append(betti_n)
 
 
-with open(f'..output/{save_path}', 'a') as f:
+with open(f'{save_path}', 'a') as f:
     writer = csv.writer(f)
     writer.writerow(betti)
 for n,b in enumerate(betti):
