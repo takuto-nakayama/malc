@@ -4,6 +4,7 @@ from itertools import combinations, chain
 from nltk import ngrams
 from scipy.sparse import lil_matrix
 import numpy as np
+import pandas as pd
 import argparse, csv, stanza
 
 
@@ -12,6 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('path', type=str)
 parser.add_argument('id', type=str)
 parser.add_argument('save_path', type=str)
+parser.add_argument('--lang_code', type=str, default='/Users/takuto/data/stanza-langlist.csv')
 parser.add_argument('--window_size', type=int, default=5)
 parser.add_argument('--max_dim', type=int, default=3)
 args = parser.parse_args()
@@ -56,9 +58,13 @@ def rank_mod2_sparse(B):
 path = args.path
 id = args.id
 save_path = args.save_path
+lang_code = args.lang_code
 window_size = args.window_size
 max_dim = args.max_dim
-nlp = stanza.Pipleine('en', processors='tokenize')
+
+df_lang_code = pd.read_csv(lang_code)[:,('Language', 'Icode')]
+code = df_lang_code['Icode'][df_lang_code['Language']==id][0]
+nlp = stanza.Pipleine(code, processors='tokenize')
 
 with open(path, 'r') as f:
     doc = f.readlines()
