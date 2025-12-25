@@ -2,10 +2,9 @@
 ## importing modules
 from itertools import combinations, chain
 from nltk import ngrams
-from nltk.tokenize import word_tokenize
 from scipy.sparse import lil_matrix
 import numpy as np
-import argparse, csv
+import argparse, csv, stanza
 
 
 ## parsing arguments
@@ -59,10 +58,19 @@ id = args.id
 save_path = args.save_path
 window_size = args.window_size
 max_dim = args.max_dim
+nlp = stanza.Pipleine('en', processors='tokenize')
 
 with open(path, 'r') as f:
-    text = f.readlines()
-tokens = [word_tokenize(sent) for sent in text]
+    doc = f.readlines()
+    out_docs = nlp.bulk_process(doc)
+
+tokens = []
+for d in out_docs:
+    tokenized_d = []
+    for sent in d.sentences:
+        for word in sent.words:
+            tokenized_d.append(word.text)
+    tokens.append(tokenized_d)
 windows = [list(ngrams(tkns, n=window_size)) for tkns in tokens]
 windows = sorted(set(chain.from_iterable(windows)))
 
@@ -117,7 +125,7 @@ for n in range(len(boundaries)):
     betti.append(betti_n)
 
 
-with open(save_path, 'a') as f:
+with open(f'..output/{save_path}', 'a') as f:
     writer = csv.writer(f)
     writer.writerow(betti)
 for n,b in enumerate(betti):
