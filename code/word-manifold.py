@@ -14,7 +14,7 @@ parser.add_argument('path', type=str)
 parser.add_argument('id', type=str)
 parser.add_argument('save_path', type=str)
 parser.add_argument('--window_size', type=int, default=5)
-parser.add_argument('--max_dim', type=int, default=2)
+parser.add_argument('--max_dim', type=int, default=3)
 args = parser.parse_args()
 
 def rank_mod2_sparse(B):
