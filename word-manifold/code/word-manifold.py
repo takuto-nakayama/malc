@@ -1,5 +1,10 @@
-#  Fitz (2025) Word Manifold
+#  Word Manifold
+#  computing Betti numbers from text data based on word n-grams. (cf. Fitz 2022)
+
+
+
 ## importing modules
+from datetime import datetime
 from itertools import combinations, chain
 from nltk import ngrams
 from scipy.sparse import lil_matrix
@@ -13,9 +18,9 @@ parser = argparse.ArgumentParser()
 parser.add_argument('path', type=str)
 parser.add_argument('id', type=str)
 parser.add_argument('save_path', type=str)
-parser.add_argument('--lang_code', type=str, default='/Users/takuto/data/stanza-langlist.csv')
+parser.add_argument('--lang_code', type=str, default='../data/stanza-langlist.csv')
 parser.add_argument('--window_size', type=int, default=5)
-parser.add_argument('--max_dim', type=int, default=3)
+parser.add_argument('--max_dim', type=int, default=4)
 args = parser.parse_args()
 
 def rank_mod2_sparse(B):
@@ -61,24 +66,31 @@ save_path = args.save_path
 lang_code = args.lang_code
 window_size = args.window_size
 max_dim = args.max_dim
+ 
+df_lang_code = pd.read_csv('/home/takuto/data/stanza-langlist.csv')[['Language', 'Icode']]
+iso = df_lang_code[df_lang_code['Language']==id]['Icode'].values[0]
+tokenizer = stanza.Pipeline(lang=iso, processors='tokenize')
 
-df_lang_code = pd.read_csv(lang_code)[:,('Language', 'Icode')]
-code = df_lang_code['Icode'][df_lang_code['Language']==id][0]
-nlp = stanza.Pipleine(code, processors='tokenize')
+start = datetime.now()
+with open(path, 'r') as file:
+    doc = file.readlines()
+    doc_sep = tokenizer.bulk_process(doc)
 
-with open(path, 'r') as f:
-    doc = f.readlines()
-    out_docs = nlp.bulk_process(doc)
-
-tokens = []
-for d in out_docs:
-    tokenized_d = []
-    for sent in d.sentences:
+token = []
+for line in doc_sep:
+    token_in_line = []
+    for sent in line.sentences:
         for word in sent.words:
-            tokenized_d.append(word.text)
-    tokens.append(tokenized_d)
-windows = [list(ngrams(tkns, n=window_size)) for tkns in tokens]
-windows = sorted(set(chain.from_iterable(windows)))
+            token_in_line.append(word.text)
+    token.append(token_in_line)
+
+window = sorted(
+    set(
+        chain.from_iterable(
+            [list(ngrams(tkns, n=window_size)) for tkns in tokens]
+            )
+        )
+    )
 
 
 ## getting all skeleta
@@ -122,17 +134,19 @@ for n in range(1, len(skeleta)):
 betti = [id]
 for n in range(len(boundaries)):
     Bn = boundaries[n]
-    rank_n = rank_mod2_sparse(Bn)
-    if n + 1 < len(boundaries):
-        rank_np1 = rank_mod2_sparse(boundaries[n + 1])
+    dim_Cn = Bn.shape[1]
+    nullity = dim_Cn - np.linalg.matrix_rank(Bn, 1e-10)
+    if n+1 < len(boundaries):
+        im_dim = np.linalg.matrix_rank(boundaries[n+1], 1e-10)
     else:
-        rank_np1 = 0
-    betti_n = Bn.shape[1] - rank_n - rank_np1
-    betti.append(betti_n)
-
+        im_dim = 0
+    betti.append(nullity - im_dim)
 
 with open(f'{save_path}', 'a') as f:
     writer = csv.writer(f)
     writer.writerow(betti)
-for n,b in enumerate(betti):
+for n,b in enumerate(betti[1:]):
 	print(f'n={n}: Betti={b}')
+end = datetime.now()
+processing = (end - start).seconds
+print(f'{processing} seconds.')
