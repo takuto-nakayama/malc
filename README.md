@@ -2,44 +2,6 @@
 ## Overview
 
 
-## Repository Structure
-```
-../
-├README.md
-├code
-│   ├bottleneck.py
-│   ├classes.py
-│   ├curvature.py
-│   ├pdgm.py
-│   ├setup.py
-│   └wassersetin.py
-├data
-│   ├bert
-│   │   ├embedding-lang1.npy
-│   │   ├embedding-lang2.npy
-│   │   └...
-│   └fasttext
-│   │   ├embedding-lang1.npy
-│   │   ├embedding-lang2.npy
-│   │   └...
-└output
-    ├bert
-    │   ├pdgm
-    │   │   ├h0
-    │   │   ├h1
-    │   │   └...
-    │   ├wasserstein.csv
-    │   └bottleneck.csv
-    └fasttext
-        ├pdgm
-        │   ├h0
-        │   ├h1
-        │   └...
-        ├wasserstein.csv
-        └bottleneck.csv
-```
-
-- `setup.py`: for preprocessing of the repository.
 
 ## How to Run
 ### Setup
@@ -48,25 +10,33 @@ Setting up will be processed by the command below in this repository:
 pip install .
 ```
 
-### Command Line & Options
-Embedding can be given by the command below:
+### Word Manifold
+#### to run
 ```
-python embed.py 'lang' 'token'
+python word-manifold.py 'lang' 'text_path'
 ```
+- `lang`: available language is shown in the table below
+- `text_path`: the file path to the input text (whose lines are recommended to be corresponding to a certain text)
 
-
-|Argument|Function|
+#### Options
+|option|function|
 |-----|-----|
-|--gpu|`bool` uses GPU|
-|--k|`int` number of neighbor points|
-|--d|`int` dimension the dataset is compressed into|
-|--save_emb|`bool` saves the embeddings|
-
-### Sample Dataset
-#### fasttext
+|--save_path|`bool`; the result will be output in .csv;<br> default="wm-{lang}-{random_number}.csv"|
+|--window_size|`int`; window size of n-gram; default=5|
 
 
-#### bert
+## Sample Data
+### fasttext
+
+
+### bert
+
+
+### Universal Declaration of Human Rights
+
+
+### Gospels
+
 
 ## Citation
 ```
