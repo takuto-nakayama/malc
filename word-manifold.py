@@ -10,9 +10,9 @@ import argparse, csv
 
 ## parsing arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('text_path', type=str)
 parser.add_argument('lang', type=str)
-parser.add_argument('save_path', type=str)
+parser.add_argument('text_path', type=str)
+parser.add_argument('--save_path', type=str, default=None)
 parser.add_argument('--window_size', type=int, default=5)
 args = parser.parse_args()
 
@@ -20,7 +20,8 @@ args = parser.parse_args()
 ## defining variables
 text_path = args.text_path
 lang = args.lang
-save_path = args.save_path
+if args.save_path == None:
+    save_path = f'wm-{lang}-{datetime.now().microsecond}'
 window_size = args.window_size
 
 wm =WordManifold(lang, text_path, window_size)
